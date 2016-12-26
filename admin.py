@@ -1,15 +1,23 @@
-import web
+from web import application
+from web.template import render
 
-urls = (
-    '/(.*)', 'hello'
-)
-app = web.application(urls, globals())
+urls = ('/(.*)', 'admin')
+app = application(urls, globals())
+templates = render('templates')
 
-class hello:        
-    def GET(self, name):
-        if not name: 
-            name = 'world'
-        return 'Hello, ' + name + '!'
+class admin:
+	def GET(self, action):
+		settings = {}
+		with open('PokemonGo-Map/config/config.ini') as file:
+			for line in file:
+				line = line.strip()
+				if not line or line.startswith('#'):
+					continue
+				key, value = line.split(': ')
+				settings[key] = value
+		return templates.settings(settings)
+	def POST(self, action):
+		return 'foo'
 
-if __name__ == "__main__":
-    app.run()
+if __name__ == '__main__':
+	app.run()
