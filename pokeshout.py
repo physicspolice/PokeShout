@@ -35,27 +35,31 @@ cursor = db.cursor()
 seen = {}
 query = "SELECT * FROM pokemon WHERE last_modified > '%s' ORDER BY last_modified DESC"
 last_modified = db.execute('SELECT MAX(last_modified) FROM pokemon').fetchone()[0]
-while True:
-	for pokemon in db.execute(query % last_modified):
-		last_modified = pokemon['last_modified']
-		if pokemon['encounter_id'] in seen:
-			continue
-		seen[pokemon['encounter_id']] = datetime.now()
-		name = pokedex[pokemon['pokemon_id'] - 1]
-		if pokemon['individual_attack']:
-			percent = (pokemon['individual_attack'] + pokemon['individual_defense'] + pokemon['individual_stamina']) * 100.0 / 45.0
-		if not name in worthy or percent < worthy[name]:
-			print '%s (%.1f%%) is unworthy.' % (name, percent)
-			continue
-		until = datetime.strptime(pokemon['disappear_time'].split('.')[0], '%Y-%m-%d %H:%M:%S')
-		until = until.replace(tzinfo=tz.tzutc()) # Timestamp from database is in UTC.
-		until = until.astimezone(tz.tzlocal())   # Convert it to my local time zone.
-		until = until.strftime('%-I:%M %p')
-		url = 'https://www.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
-		tweet = '%s (%.1f%%) %s %s' % (name, percent, until, url)
-		print(tweet)
-		api.PostUpdate(tweet)
-	for encounter_id, when in seen.items():
-		if when < datetime.now() - timedelta(minutes=15):
-			del seen[encounter_id] # Clean out expired encounteres.
-	sleep(1)
+print('Watching for new pokemon (%s)' % last_modified.split('.')[0])
+try:
+	while True:
+		for pokemon in db.execute(query % last_modified):
+			last_modified = pokemon['last_modified']
+			if pokemon['encounter_id'] in seen:
+				continue
+			seen[pokemon['encounter_id']] = datetime.now()
+			name = pokedex[pokemon['pokemon_id'] - 1]
+			if pokemon['individual_attack']:
+				percent = (pokemon['individual_attack'] + pokemon['individual_defense'] + pokemon['individual_stamina']) * 100.0 / 45.0
+			if not name in worthy or percent < worthy[name]:
+				print '%s (%.1f%%) is unworthy.' % (name, percent)
+				continue
+			until = datetime.strptime(pokemon['disappear_time'].split('.')[0], '%Y-%m-%d %H:%M:%S')
+			until = until.replace(tzinfo=tz.tzutc()) # Timestamp from database is in UTC.
+			until = until.astimezone(tz.tzlocal())   # Convert it to my local time zone.
+			until = until.strftime('%-I:%M %p')
+			url = 'https://www.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
+			tweet = '%s (%.1f%%) %s %s' % (name, percent, until, url)
+			print(tweet)
+			api.PostUpdate(tweet)
+		for encounter_id, when in seen.items():
+			if when < datetime.now() - timedelta(minutes=15):
+				del seen[encounter_id] # Clean out expired encounteres.
+		sleep(1)
+except KeyboardInterrupt:
+	pass
