@@ -32,12 +32,23 @@ db.row_factory = Row
 cursor = db.cursor()
 
 # Continuously poll for new pokemon.
+captcha = False
 seen = {}
 query = "SELECT * FROM pokemon WHERE last_modified > '%s' ORDER BY last_modified DESC"
 last_modified = db.execute('SELECT MAX(last_modified) FROM pokemon').fetchone()[0]
 print('Watching for new pokemon (%s)' % last_modified.split('.')[0])
 try:
 	while True:
+		if db.execute('SELECT 1.0 * SUM(captcha) / COUNT(*) FROM workerstatus').fetchone()[0] > 0.75:
+			if not captcha:
+				message = 'Running low on captchas...'
+				print(message)
+				for admin in settings.captcha_admins:
+					api.PostDirectMessage(text=message, screen_name=admin)
+				captcha = True
+		elif captcha:
+			print('Got more captchas!')
+			captcha = False
 		for pokemon in db.execute(query % last_modified):
 			last_modified = pokemon['last_modified']
 			if pokemon['encounter_id'] in seen:
