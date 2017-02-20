@@ -10,8 +10,13 @@ from dateutil import tz
 csv = reader(open('pokedex.csv'))
 pokedex = [x[0] for x in csv]
 
-# Initialize Twitter API.
+# Load pokemon CSVs.
+csv = reader(open('worthy.csv'))
+worthy = {}
+for row in csv:
+	worthy[row[1]] = int(row[0])
 
+# Initialize Twitter API.
 api = Api(
 	consumer_key=settings.consumer_key,
 	consumer_secret=settings.consumer_secret,
@@ -39,16 +44,7 @@ while True:
 		name = pokedex[pokemon['pokemon_id'] - 1]
 		if pokemon['individual_attack']:
 			percent = (pokemon['individual_attack'] + pokemon['individual_defense'] + pokemon['individual_stamina']) * 100.0 / 45.0
-		worthy = False
-		if name in ['Snorlax', 'Lapras', 'Dratini', 'Dragonair', 'Dragonite']:
-			worthy = True
-		if name in ['Growlithe', 'Eevee', 'Exeggcute', 'Arcanine', 'Vaporeon', 'Jolteon', 'Exeggutor']:
-			if percent >= 80:
-				worthy = True
- 		if name in ['Magikarp', 'Pikachu', 'Gastly', 'Rhyhorn', 'Slowbro', 'Drowzee', 'Machop', 'Poliwag', 'Bulbasaur', 'Oddish']:
-			if percent >= 95:
-				worthy = True
-		if not worthy:
+		if not name in worthy or percent < worthy[name]:
 			print '%s (%.1f%%) is unworthy.' % (name, percent)
 			continue
 		until = datetime.strptime(pokemon['disappear_time'].split('.')[0], '%Y-%m-%d %H:%M:%S')
