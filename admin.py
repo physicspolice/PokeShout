@@ -8,7 +8,7 @@ templates = render('templates')
 class admin:
 	def GET(self, action):
 		settings = {}
-		with open('PokemonGo-Map/config/config.ini') as file:
+		with open('RocketMap/config/config.ini') as file:
 			for line in file:
 				line = line.strip()
 				if not line or line.startswith('#'):

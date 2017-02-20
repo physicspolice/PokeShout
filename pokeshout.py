@@ -31,7 +31,7 @@ db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
 db.row_factory = Row
 cursor = db.cursor()
 
-# Continuously poll for new Pokemon.
+# Continuously poll for new pokemon.
 seen = {}
 query = "SELECT * FROM pokemon WHERE last_modified > '%s' ORDER BY last_modified DESC"
 last_modified = db.execute('SELECT MAX(last_modified) FROM pokemon').fetchone()[0]
