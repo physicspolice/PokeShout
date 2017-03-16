@@ -7,12 +7,21 @@ from json import dumps
 from sys import executable
 from os import makedirs
 
+from settings import admin_password
+
 # Suppress warnings thrown by webpy.
 filterwarnings("ignore", category=DeprecationWarning)
 
 urls = ('/(.*)', 'AdminPage')
 
 app = web.application(urls, globals())
+
+# http://webpy.org/cookbook/session_with_reloader
+if web.config.get('_session') is None:
+    session = web.session.Session(app, web.session.DiskStore('sessions'), {'auth': False, 'page': None})
+    web.config._session = session
+else:
+    session = web.config._session
 
 server = None
 logfile = None
@@ -24,6 +33,10 @@ class AdminPage:
 	logpath = 'logs/map.txt'
 
 	def GET(self, action):
+		# TODO add pages to tail admin and map logs.
+		if not session.auth:
+			session.page = action
+			return render('templates').login('')
 		settings = {}
 		with open(self.config) as file:
 			for line in file:
@@ -36,8 +49,15 @@ class AdminPage:
 		return render('templates').settings(settings, running)
 
 	def POST(self, action):
-		web.header('Content-Type', 'text/plain')
 		data = web.input()
+		if action == 'login':
+			if data.password == admin_password:
+				session.auth = True
+				raise web.seeother('/' + session.page)
+			return render('templates').login('Password incorrect.')
+		web.header('Content-Type', 'text/plain')
+		if not session.auth:
+			return self.response('Unauthorized.')
 		if action == 'save':
 			try:
 				with open(self.config, 'w') as file:

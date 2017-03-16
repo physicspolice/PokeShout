@@ -4,9 +4,9 @@ function update(running)
 	$('input[name=stop]').prop('disabled', !running);
 }
 
-function request(command, data)
+function request(command, data={})
 {
-	$.post('/' + command, function(response)
+	$.post('/' + command, data, function(response)
 	{
 		if(response.error)
 			alert(response.error);
@@ -16,7 +16,7 @@ function request(command, data)
 
 $(document).ready(function()
 {
-	update($('body').attr('data-running'));
+	update(parseInt($('body').attr('data-running')));
 	$('input[value=Add]').click(function()
 	{
 		var key = prompt('Enter the new setting name.').toLowerCase();
