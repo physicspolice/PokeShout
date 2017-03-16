@@ -6,6 +6,17 @@ from sqlite3 import connect, Row, PARSE_DECLTYPES
 from datetime import datetime, timedelta
 from dateutil import tz
 
+# TODO: manage admin and rocket map services. 
+
+def sql_to_datetime(timestamp):
+	d = datetime.strptime(timestamp.split('.')[0], '%Y-%m-%d %H:%M:%S')
+	d = d.replace(tzinfo=tz.tzutc())  # Timestamp from database is in UTC.
+	return d.astimezone(tz.tzlocal()) # Convert it to my local time zone.
+
+def console(message):
+	timestamp = datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')
+	print('%s %s' % (timestamp, message))
+
 # Load pokemon CSVs.
 csv = reader(open('pokedex.csv'))
 pokedex = [x[0] for x in csv]
@@ -24,7 +35,7 @@ api = Api(
 	access_token_secret=settings.access_token_secret
 )
 user = api.VerifyCredentials()
-print('Twitter API connected: %s' % user.screen_name)
+console('Twitter API connected: %s' % user.screen_name)
 
 # Connect to database.
 db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
@@ -36,18 +47,18 @@ captcha = False
 seen = {}
 query = "SELECT * FROM pokemon WHERE last_modified > '%s' ORDER BY last_modified DESC"
 last_modified = db.execute('SELECT MAX(last_modified) FROM pokemon').fetchone()[0]
-print('Watching for new pokemon (%s)' % last_modified.split('.')[0])
+console('Last Pokemon seen: %s' % sql_to_datetime(last_modified).strftime('%Y-%m-%d %I:%M:%S %p'))
 try:
 	while True:
 		if db.execute('SELECT 1.0 * SUM(captcha) / COUNT(*) FROM workerstatus').fetchone()[0] > 0.75:
 			if not captcha:
 				message = 'Running low on captchas...'
-				print(message)
+				console(message)
 				for admin in settings.captcha_admins:
 					api.PostDirectMessage(text=message, screen_name=admin)
 				captcha = True
 		elif captcha:
-			print('Got more captchas!')
+			console('Got more captchas!')
 			captcha = False
 		for pokemon in db.execute(query % last_modified):
 			last_modified = pokemon['last_modified']
@@ -55,18 +66,14 @@ try:
 				continue
 			seen[pokemon['encounter_id']] = datetime.now()
 			name = pokedex[pokemon['pokemon_id'] - 1]
-			if pokemon['individual_attack']:
-				percent = (pokemon['individual_attack'] + pokemon['individual_defense'] + pokemon['individual_stamina']) * 100.0 / 45.0
+			percent = (pokemon['individual_attack'] + pokemon['individual_defense'] + pokemon['individual_stamina']) * 100.0 / 45.0
 			if not name in worthy or percent < worthy[name]:
-				print '%s (%.1f%%) is unworthy.' % (name, percent)
+				console('%s (%.1f%%) is unworthy.' % (name, percent))
 				continue
-			until = datetime.strptime(pokemon['disappear_time'].split('.')[0], '%Y-%m-%d %H:%M:%S')
-			until = until.replace(tzinfo=tz.tzutc()) # Timestamp from database is in UTC.
-			until = until.astimezone(tz.tzlocal())   # Convert it to my local time zone.
-			until = until.strftime('%-I:%M %p')
+			until = sql_to_datetime(pokemon['disappear_time']).strftime('%-I:%M %p')
 			url = 'https://www.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
 			tweet = '%s (%.1f%%) %s %s' % (name, percent, until, url)
-			print(tweet)
+			console(tweet)
 			api.PostUpdate(tweet)
 		for encounter_id, when in seen.items():
 			if when < datetime.now() - timedelta(minutes=15):

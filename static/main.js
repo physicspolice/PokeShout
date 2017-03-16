@@ -11,7 +11,30 @@ $(document).ready(function()
 	});
 	$('input[value=Help]').click(function()
 	{
-		var help = 'http://pgm.readthedocs.io/en/develop/extras/commandline.html';
+		var help = 'http://rocketmap.readthedocs.io/en/develop/extras/commandline.html';
 		window.open(help);
+	});
+	$('input[value=Save]').click(function()
+	{
+		var settings = {};
+		$('section div').each(function()
+		{
+			var name = $(this).find('label').text();
+			var value = $(this).find('input').val();
+			settings[name] = value;
+		});
+		$.post('/save', settings, function(response)
+		{
+			if(response != 'Success')
+				alert(response);
+		});
+	});
+	$('input[value=Restart]').click(function()
+	{
+		$.post('/restart', function(response)
+		{
+			if(response != 'Success')
+				alert(response);
+		});
 	});
 });
