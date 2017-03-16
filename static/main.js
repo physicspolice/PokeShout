@@ -1,5 +1,22 @@
+function update(running)
+{
+	$('input[name=start]').val(running ? 'Restart': 'Start');
+	$('input[name=stop]').prop('disabled', !running);
+}
+
+function request(command, data)
+{
+	$.post('/' + command, function(response)
+	{
+		if(response.error)
+			alert(response.error);
+		update(response.running);
+	}, 'json');
+}
+
 $(document).ready(function()
 {
+	update($('body').attr('data-running'));
 	$('input[value=Add]').click(function()
 	{
 		var key = prompt('Enter the new setting name.').toLowerCase();
@@ -23,18 +40,11 @@ $(document).ready(function()
 			var value = $(this).find('input').val();
 			settings[name] = value;
 		});
-		$.post('/save', settings, function(response)
-		{
-			if(response != 'Success')
-				alert(response);
-		});
+		request('save', settings);
 	});
-	$('input[value=Restart]').click(function()
+	$('input[name=start], input[name=stop]').click(function()
 	{
-		$.post('/restart', function(response)
-		{
-			if(response != 'Success')
-				alert(response);
-		});
+		var command = $(this).val().toLowerCase();
+		request(command);
 	});
 });

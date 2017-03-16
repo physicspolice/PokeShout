@@ -1,12 +1,13 @@
 import settings
+from os import makedirs
 from csv import reader
+from sys import executable
 from time import sleep
 from twitter import Api
 from sqlite3 import connect, Row, PARSE_DECLTYPES
 from datetime import datetime, timedelta
 from dateutil import tz
-
-# TODO: manage admin and rocket map services. 
+from subprocess import Popen
 
 def sql_to_datetime(timestamp):
 	d = datetime.strptime(timestamp.split('.')[0], '%Y-%m-%d %H:%M:%S')
@@ -15,13 +16,17 @@ def sql_to_datetime(timestamp):
 
 def console(message):
 	timestamp = datetime.now().strftime('%Y-%m-%d %I:%M:%S %p')
-	print('%s %s' % (timestamp, message))
+	print('\r%s %s' % (timestamp, message))
 
-# Load pokemon CSVs.
+# Load list of pokemon names.
 csv = reader(open('pokedex.csv'))
 pokedex = [x[0] for x in csv]
 
-# Load pokemon CSVs.
+# Load list of quality pokemon.
+try:
+	makedirs('logs')
+except:
+	pass # Already there.
 csv = reader(open('worthy.csv'))
 worthy = {}
 for row in csv:
@@ -41,6 +46,10 @@ console('Twitter API connected: %s' % user.screen_name)
 db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
 db.row_factory = Row
 cursor = db.cursor()
+
+# Start up the admin page.
+log = open('logs/admin.txt', 'a')
+admin = Popen([executable, 'admin.py'], stdout=log, stderr=log)
 
 # Continuously poll for new pokemon.
 captcha = False
@@ -66,7 +75,11 @@ try:
 				continue
 			seen[pokemon['encounter_id']] = datetime.now()
 			name = pokedex[pokemon['pokemon_id'] - 1]
-			percent = (pokemon['individual_attack'] + pokemon['individual_defense'] + pokemon['individual_stamina']) * 100.0 / 45.0
+			percent = (100.0 / 45.0) * (
+				pokemon['individual_attack'] +
+				pokemon['individual_defense'] +
+				pokemon['individual_stamina']
+			)
 			if not name in worthy or percent < worthy[name]:
 				console('%s (%.1f%%) is unworthy.' % (name, percent))
 				continue
@@ -76,8 +89,11 @@ try:
 			console(tweet)
 			api.PostUpdate(tweet)
 		for encounter_id, when in seen.items():
-			if when < datetime.now() - timedelta(minutes=15):
+			if when < datetime.now() - timedelta(minutes=60):
 				del seen[encounter_id] # Clean out expired encounteres.
 		sleep(1)
 except KeyboardInterrupt:
+	console('Shutting down...')
+	log.close()
+	admin.terminate()
 	pass

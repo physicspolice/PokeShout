@@ -1,46 +1,101 @@
 import web # http://webpy.org/
 from web.template import render
+from warnings import filterwarnings
+from subprocess import Popen
+from time import sleep
+from json import dumps
+from sys import executable
+from os import makedirs
 
-urls = ('/(.*)', 'admin')
+# Suppress warnings thrown by webpy.
+filterwarnings("ignore", category=DeprecationWarning)
+
+urls = ('/(.*)', 'AdminPage')
+
 app = web.application(urls, globals())
-templates = render('templates')
-config = 'RocketMap/config/config.ini'
 
-class admin:
+server = None
+logfile = None
+
+class AdminPage:
+
+	config = 'RocketMap/config/config.ini'
+	script = 'RocketMap/runserver.py'
+	logpath = 'logs/map.txt'
 
 	def GET(self, action):
 		settings = {}
-		with open(config) as file:
+		with open(self.config) as file:
 			for line in file:
 				line = line.strip()
 				if not line or line.startswith('#'):
 					continue
 				key, value = line.split(': ')
 				settings[key] = value
-		return templates.settings(settings)
+		running = int(self.running())
+		return render('templates').settings(settings, running)
 
 	def POST(self, action):
 		web.header('Content-Type', 'text/plain')
 		data = web.input()
-
 		if action == 'save':
 			try:
-				with open(config, 'w') as file:
+				with open(self.config, 'w') as file:
 					for name, value in data.iteritems():
 						if value != '':
 							file.write('%s: %s\n' % (name, value))
-				return 'Success'
+				return self.response('')
 			except Exception as e:
-				return str(e)
-
+				return self.response(e)
+		if action == 'start':
+			return self.response(self.start())
+		if action == 'stop':
+			return self.response(self.stop())
 		if action == 'restart':
-			# get PID from (?)
-			# kill process by PID
-			# start new process
-			# do (?) with new process PID
-			return 'TODO'
+			return self.response(self.stop() or self.start())
+		return self.response('Unrecognized POST action: %s' % action)
 
-		return 'Unrecognized POST action: %s' % action
+	def start(self):
+		global server, logfile
+		if self.running():
+			return 'The map server is already running.'
+		try:
+			makedirs('logs')
+		except:
+			pass # Already there.
+		try:
+			logfile = open(self.logpath, 'a')
+		except:
+			return 'Cannot open log file: %s' % self.logpath
+		try:
+			server = Popen([executable, self.script], stdout=logfile, stderr=logfile)
+		except:
+			return 'Failed to open map server subprocess!'
+		return '' # No error.
+
+	def stop(self):
+		global server, logfile
+		if not self.running():
+			return 'The map server is not running.'
+		server.terminate()
+		logfile.close()
+		tries = 1
+		while self.running():
+			if tries > 100:
+				return 'The map server did not close promptly.'
+			sleep(0.1)
+			tries += 1
+		return '' # No error.
+
+	def response(self, error):
+		return dumps({
+			'error': str(error),
+			'running': self.running(),
+		})
+
+	def running(self):
+		global server
+		return bool(server and server.poll() is None)
 
 if __name__ == '__main__':
 	app.run()

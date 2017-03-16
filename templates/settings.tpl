@@ -1,4 +1,4 @@
-$def with (settings)
+$def with (settings, running)
 <!DOCTYPE html>
 <html>
 	<head>
@@ -8,7 +8,7 @@ $def with (settings)
 		<script src="/static/main.js"></script>
 		<meta charset="utf-8" />
 	</head>
-	<body>
+	<body data-running="$running">
 		<section>
 			$for key, value in settings.iteritems():
 				<div>
@@ -20,7 +20,8 @@ $def with (settings)
 			<input type="button" value="Add" />
 			<input type="button" value="Help" />
 			<input type="button" value="Save" />
-			<input type="button" value="Restart" />
+			<input type="button" value="Start" name='start' />
+			<input type="button" value="Stop"  name='stop' />
 		</footer>
 	</body>
 </html>

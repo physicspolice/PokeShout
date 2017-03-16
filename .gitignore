@@ -2,4 +2,5 @@
 accounts.csv
 settings.py
 pogom.db*
+logs
 RocketMap
