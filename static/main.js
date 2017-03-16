@@ -26,11 +26,6 @@ $(document).ready(function()
 		$('section').append(setting);
 		$('html, body').animate({ 'scrollTop': $(document).height() }, 1000);
 	});
-	$('input[value=Help]').click(function()
-	{
-		var help = 'http://rocketmap.readthedocs.io/en/develop/extras/commandline.html';
-		window.open(help);
-	});
 	$('input[value=Save]').click(function()
 	{
 		var settings = {};
@@ -46,5 +41,10 @@ $(document).ready(function()
 	{
 		var command = $(this).val().toLowerCase();
 		request(command);
+	});
+	$('input[value=Logs]').click(function()
+	{
+		// TODO setInterval to tail logs via AJAX and display in its own <section>.
+		// TODO change this button to "settings" which calls stopInterval.
 	});
 });

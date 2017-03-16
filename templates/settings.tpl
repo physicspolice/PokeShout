@@ -9,6 +9,13 @@ $def with (settings, running)
 		<meta charset="utf-8" />
 	</head>
 	<body data-running="$running">
+		<header>
+			<a href="$settings['manual-captcha-domain']/">Map</a>
+			<a href="$settings['manual-captcha-domain']/stats">Stats</a>
+			<a href="$settings['manual-captcha-domain']/bookmarklet">Captchas</a>
+			<a href="https://twitter.com/PokeShout">Twitter</a>
+			<a href="http://rocketmap.readthedocs.io/en/develop/extras/commandline.html">Docs</a>
+		</header>
 		<section>
 			$for key, value in settings.iteritems():
 				<div>
@@ -18,10 +25,10 @@ $def with (settings, running)
 		</section>
 		<footer>
 			<input type="button" value="Add" />
-			<input type="button" value="Help" />
 			<input type="button" value="Save" />
 			<input type="button" value="Start" name='start' />
 			<input type="button" value="Stop"  name='stop' />
+			<input type="button" value="Logs" />
 		</footer>
 	</body>
 </html>

@@ -33,7 +33,6 @@ class AdminPage:
 	logpath = 'logs/map.txt'
 
 	def GET(self, action):
-		# TODO add pages to tail admin and map logs.
 		if not session.auth:
 			session.page = action
 			return render('templates').login('')
@@ -73,6 +72,8 @@ class AdminPage:
 			return self.response(self.stop())
 		if action == 'restart':
 			return self.response(self.stop() or self.start())
+		if action == 'logs':
+			pass # TODO tail map server logs.
 		return self.response('Unrecognized POST action: %s' % action)
 
 	def start(self):
