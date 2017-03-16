@@ -28,8 +28,8 @@ header, footer {
 	position: fixed;
 	background: #eee;
 	text-align: center;
-	width: calc(100% - 2em);
-	padding: 1em;
+	width: calc(100% - 1em);
+	padding: 1em 0.5em;
 }
 header {
 	top: 0;
@@ -42,7 +42,7 @@ a {
 	text-decoration: none;
 	border: 1px solid #888;
 	border-radius: 0.25em;
-	padding: 0.25em;
+	padding: 0.15em 0.25em;
 	background-color: #ddd;
 }
 a:hover {
