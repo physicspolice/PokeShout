@@ -12,7 +12,7 @@ $def with (settings, running)
 		<header>
 			<a href="$settings['manual-captcha-domain']/" data-type="server">Map</a>
 			<a href="$settings['manual-captcha-domain']/stats" data-type="server">Stats</a>
-			<a href="$settings['manual-captcha-domain']/bookmarklet" data-type="server">Captchas</a>
+			<a href="$settings['manual-captcha-domain']/bookmarklet" data-type="server" id="captchas">Captchas</a>
 			<a href="https://twitter.com/PokeShout">Twitter</a>
 			<a href="http://rocketmap.readthedocs.io/en/develop/extras/commandline.html">Docs</a>
 		</header>

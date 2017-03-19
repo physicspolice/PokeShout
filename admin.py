@@ -7,6 +7,7 @@ from json import dumps
 from sys import executable
 from os import makedirs
 from signal import signal, SIGILL
+from sqlite3 import connect, PARSE_DECLTYPES
 
 from settings import admin_password
 
@@ -16,6 +17,8 @@ filterwarnings("ignore", category=DeprecationWarning)
 urls = ('/(.*)', 'AdminPage')
 
 app = web.application(urls, globals())
+
+db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
 
 # http://webpy.org/cookbook/session_with_reloader
 if web.config.get('_session') is None:
@@ -73,10 +76,15 @@ class AdminPage:
 			return self.response(self.stop())
 		if action == 'restart':
 			return self.response(self.stop() or self.start())
-		if action == 'logs':
-			return check_output(['tail', '-n' '100', self.logpath])
-		if action == 'beat':
-			pass # TODO heartbeat to get status and number of captchas.
+		if action == 'poll':
+			logs = ''
+			if data.get('logs', False):
+				try:
+					# TODO to save data, only send new log lines.
+					logs = check_output(['tail', '-n' '100', self.logpath])
+				except:
+					logs = '(The log file is empty!)'
+			return self.response(logs=logs)
 		return self.response('Unrecognized POST action: %s' % action)
 
 	def start(self):
@@ -111,15 +119,25 @@ class AdminPage:
 			tries += 1
 		return '' # No error.
 
-	def response(self, error):
-		return dumps({
+	def response(self, error='', logs=''):
+		response = {
 			'error': str(error),
 			'running': self.running(),
-		})
+			'captchas': self.captchas(),
+			'logs': logs,
+		}
+		return dumps(response)
 
 	def running(self):
 		global server
 		return bool(server and server.poll() is None)
+
+	def captchas(self):
+		global db
+		try:
+			return db.execute('SELECT COUNT(*) FROM workerstatus WHERE captcha').fetchone()[0]
+		except:
+			return '?'
 
 if __name__ == '__main__':
 	def clean():

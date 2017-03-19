@@ -1,11 +1,4 @@
-var logTimer = null;
-function logPoll()
-{
-	$.post('/logs', function(response)
-	{
-		$('section').text(response);
-	});
-}
+var getLogs = false;
 
 function update(running)
 {
@@ -21,12 +14,17 @@ function request(command, data={})
 		if(response.error)
 			alert(response.error);
 		update(response.running);
+		$('#captchas').text('Captchas (' + response.captchas + ')');
+		if(response.logs)
+			$('#logs').text(response.logs);
 	}, 'json');
 }
 
 $(document).ready(function()
 {
+	$('#logs').hide();
 	update(parseInt($('body').attr('data-running')));
+	setInterval(function() { request('poll', { 'logs': getLogs }); }, 10000);
 	$('input[value=Add]').click(function()
 	{
 		var key = prompt('Enter the new setting name.').toLowerCase();
@@ -54,20 +52,8 @@ $(document).ready(function()
 	});
 	$('input[name=logs]').click(function()
 	{
-		if(logTimer)
-		{
-			clearTimeout(logTimer);
-			logTimer = null;
-			$(this).val('Logs');
-			$('#logs').hide();
-			$('#settings').show();
-		}
-		else
-		{
-			logTimer = setInterval(logPoll, 500);
-			$(this).val('End');
-			$('#logs').show();
-			$('#settings').hide();
-		}
+		getLogs = !getLogs;
+		$(this).val(getLogs ? 'End' : 'Logs');
+		$('#settings, #logs').toggle();
 	});
 });
