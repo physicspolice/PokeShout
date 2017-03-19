@@ -2,6 +2,7 @@ function update(running)
 {
 	$('input[name=start]').val(running ? 'Restart': 'Start');
 	$('input[name=stop]').prop('disabled', !running);
+	$('header a[data-type=server]').toggleClass('offline', !running);
 }
 
 function request(command, data={})

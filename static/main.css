@@ -52,3 +52,11 @@ a:hover {
 a, input[type=button] {
 	margin: 0 0.1em;
 }
+a.offline {
+	background-color: #eee;
+	color: #888;
+	cursor: unset;
+}
+a.offline:hover {
+	text-decoration: none;
+}
