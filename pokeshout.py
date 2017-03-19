@@ -45,7 +45,6 @@ console('Twitter API connected: %s' % user.screen_name)
 # Connect to database.
 db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
 db.row_factory = Row
-cursor = db.cursor()
 
 # Start up the admin page.
 log = open('logs/admin.txt', 'a')

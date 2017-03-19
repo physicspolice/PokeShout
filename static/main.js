@@ -24,6 +24,7 @@ $(document).ready(function()
 {
 	$('#logs').hide();
 	update(parseInt($('body').attr('data-running')));
+	$('#captchas').text('Captchas (' + $('body').attr('data-captchas') + ')');
 	setInterval(function() { request('poll', { 'logs': getLogs }); }, 10000);
 	$('input[value=Add]').click(function()
 	{

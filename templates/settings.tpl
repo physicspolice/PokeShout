@@ -1,4 +1,4 @@
-$def with (settings, running)
+$def with (settings, running, captchas)
 <!DOCTYPE html>
 <html>
 	<head>
@@ -8,7 +8,7 @@ $def with (settings, running)
 		<script src="/static/main.js"></script>
 		<meta charset="utf-8" />
 	</head>
-	<body data-running="$running">
+	<body data-running="$running" data-captchas="$captchas">
 		<header>
 			<a href="$settings['manual-captcha-domain']/" data-type="server">Map</a>
 			<a href="$settings['manual-captcha-domain']/stats" data-type="server">Stats</a>
@@ -23,7 +23,7 @@ $def with (settings, running)
 					<input type="text" name="$key" value="$value" />
 				</div>
 		</section>
-		<section id="logs"></section>
+		<section id="logs">Loading...</section>
 		<footer>
 			<input type="button" value="Add" />
 			<input type="button" value="Save" />

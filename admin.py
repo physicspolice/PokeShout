@@ -18,8 +18,6 @@ urls = ('/(.*)', 'AdminPage')
 
 app = web.application(urls, globals())
 
-db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
-
 # http://webpy.org/cookbook/session_with_reloader
 if web.config.get('_session') is None:
     session = web.session.Session(app, web.session.DiskStore('sessions'), {'auth': False, 'page': None})
@@ -48,8 +46,7 @@ class AdminPage:
 					continue
 				key, value = line.split(': ')
 				settings[key] = value
-		running = int(self.running())
-		return render('templates').settings(settings, running)
+		return render('templates').settings(settings, int(self.running()), self.captchas())
 
 	def POST(self, action):
 		data = web.input()
@@ -81,7 +78,7 @@ class AdminPage:
 			if data.get('logs', False):
 				try:
 					# TODO to save data, only send new log lines.
-					logs = check_output(['tail', '-n' '100', self.logpath])
+					logs = check_output(['tail', '-n' '46', self.logpath])
 				except:
 					logs = '(The log file is empty!)'
 			return self.response(logs=logs)
@@ -133,11 +130,12 @@ class AdminPage:
 		return bool(server and server.poll() is None)
 
 	def captchas(self):
-		global db
 		try:
-			return db.execute('SELECT COUNT(*) FROM workerstatus WHERE captcha').fetchone()[0]
-		except:
-			return '?'
+			# Create a new DB connection because it can only be used in this thread.
+			db = connect('pogom.db', detect_types=PARSE_DECLTYPES)
+			return db.execute('SELECT SUM(captcha) FROM workerstatus').fetchone()[0]
+		except Exception as e:
+			return str(e)
 
 if __name__ == '__main__':
 	def clean():
