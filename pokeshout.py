@@ -63,8 +63,11 @@ try:
 			if not captcha:
 				message = 'Running low on captchas...'
 				console(message)
-				for admin in settings.captcha_admins:
-					api.PostDirectMessage(text=message, screen_name=admin)
+				for handle in settings.captcha_admins:
+					try:
+						api.PostDirectMessage(text=message, screen_name=handle)
+					except:
+						console('Failed to send direct message: %s' % handle)
 				captcha = True
 		elif captcha:
 			console('Got more captchas!')
@@ -96,4 +99,4 @@ except KeyboardInterrupt:
 	console('Shutting down...')
 	log.close()
 	admin.terminate()
-	pass
+	admin.wait()

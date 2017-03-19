@@ -1,3 +1,12 @@
+var logTimer = null;
+function logPoll()
+{
+	$.post('/logs', function(response)
+	{
+		$('section').text(response);
+	});
+}
+
 function update(running)
 {
 	$('input[name=start]').val(running ? 'Restart': 'Start');
@@ -43,9 +52,22 @@ $(document).ready(function()
 		var command = $(this).val().toLowerCase();
 		request(command);
 	});
-	$('input[value=Logs]').click(function()
+	$('input[name=logs]').click(function()
 	{
-		// TODO setInterval to tail logs via AJAX and display in its own <section>.
-		// TODO change this button to "settings" which calls stopInterval.
+		if(logTimer)
+		{
+			clearTimeout(logTimer);
+			logTimer = null;
+			$(this).val('Logs');
+			$('#logs').hide();
+			$('#settings').show();
+		}
+		else
+		{
+			logTimer = setInterval(logPoll, 500);
+			$(this).val('End');
+			$('#logs').show();
+			$('#settings').hide();
+		}
 	});
 });

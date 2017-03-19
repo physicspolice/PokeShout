@@ -1,11 +1,12 @@
 import web # http://webpy.org/
 from web.template import render
 from warnings import filterwarnings
-from subprocess import Popen
+from subprocess import Popen, check_output
 from time import sleep
 from json import dumps
 from sys import executable
 from os import makedirs
+from signal import signal, SIGILL
 
 from settings import admin_password
 
@@ -73,7 +74,9 @@ class AdminPage:
 		if action == 'restart':
 			return self.response(self.stop() or self.start())
 		if action == 'logs':
-			pass # TODO tail map server logs.
+			return check_output(['tail', '-n' '100', self.logpath])
+		if action == 'beat':
+			pass # TODO heartbeat to get status and number of captchas.
 		return self.response('Unrecognized POST action: %s' % action)
 
 	def start(self):
@@ -119,4 +122,9 @@ class AdminPage:
 		return bool(server and server.poll() is None)
 
 if __name__ == '__main__':
+	def clean():
+		if server:
+			server.terminate()
+			server.wait()
+	signal(SIGILL, clean)
 	app.run()

@@ -16,19 +16,20 @@ $def with (settings, running)
 			<a href="https://twitter.com/PokeShout">Twitter</a>
 			<a href="http://rocketmap.readthedocs.io/en/develop/extras/commandline.html">Docs</a>
 		</header>
-		<section>
+		<section id="settings">
 			$for key, value in settings.iteritems():
 				<div>
 					<label>$key</label>
 					<input type="text" name="$key" value="$value" />
 				</div>
 		</section>
+		<section id="logs"></section>
 		<footer>
 			<input type="button" value="Add" />
 			<input type="button" value="Save" />
-			<input type="button" value="Start" name='start' />
-			<input type="button" value="Stop"  name='stop' />
-			<input type="button" value="Logs" />
+			<input type="button" value="Start" name="start" />
+			<input type="button" value="Stop"  name="stop" />
+			<input type="button" value="Logs"  name="logs" />
 		</footer>
 	</body>
 </html>

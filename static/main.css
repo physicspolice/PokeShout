@@ -60,3 +60,8 @@ a.offline {
 a.offline:hover {
 	text-decoration: none;
 }
+#logs {
+	font-family: monospace;
+    white-space: pre;
+	padding: 10px;
+}

@@ -1,8 +1,5 @@
 run:
-	python RocketMap/runserver.py
-
-tos:
-	python accept-tos.py
+	python pokeshout.py
 
 register:
 	open https://club.pokemon.com/us/pokemon-trainer-club/sign-up/
