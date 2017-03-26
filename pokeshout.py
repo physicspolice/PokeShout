@@ -22,6 +22,11 @@ def console(message):
 csv = reader(open('pokedex.csv'))
 pokedex = [x[0] for x in csv]
 
+# Load list of pokemon moves.
+moves = {}
+for row in reader(open('moves.csv')):
+	moves[int(row[0])] = row[1]
+
 # Load list of quality pokemon.
 try:
 	makedirs('logs')
@@ -78,7 +83,7 @@ try:
 			seen[pokemon['encounter_id']] = datetime.now()
 			name = pokedex[pokemon['pokemon_id'] - 1]
 			if pokemon['individual_attack'] is not None:
-				percent = (100.0 / 45.0) * (
+				percent = round(100.0 / 45.0) * (
 					pokemon['individual_attack'] +
 					pokemon['individual_defense'] +
 					pokemon['individual_stamina']
@@ -87,13 +92,23 @@ try:
 				console('Could not get IVs for %s!' % name)
 				percent = 0 # Assume it's shitty.
 			if not name in worthy or percent < worthy[name]:
-				console('%s (%.1f%%) is unworthy.' % (name, percent))
+				console('%s (%d%%) is unworthy.' % (name, percent))
 				continue
 			expires = sql_to_datetime(pokemon['disappear_time'])
-			until = expires.strftime('%-I:%M %p')
 			minutes, seconds = divmod((expires - datetime.now().replace(tzinfo=tz.tzlocal())).seconds, 60)
 			url = 'https://www.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
-			tweet = '%s (%.1f%%) until %s (%dm %ds) %s' % (name, percent, until, minutes, seconds, url)
+			tweet = '%s %d%% (%d/%d/%d) [%s/%s] %s (%dm %ds) %s' % (
+				name,
+				percent,
+				pokemon['individual_attack'] or 0,
+				pokemon['individual_defense'] or 0,
+				pokemon['individual_stamina'] or 0,
+				moves[pokemon['move_1'] or 0],
+				moves[pokemon['move_2'] or 0],
+				expires.strftime('%-I:%M:%S %p'),
+				minutes, seconds,
+				url,
+			)
 			console(tweet)
 			api.PostUpdate(tweet)
 		for encounter_id, when in seen.items():
