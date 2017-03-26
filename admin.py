@@ -6,6 +6,7 @@ from time import sleep
 from json import dumps
 from sys import executable
 from os import makedirs
+from os.path import getsize
 from signal import signal, SIGILL
 from sqlite3 import connect, PARSE_DECLTYPES
 
@@ -75,13 +76,27 @@ class AdminPage:
 			return self.response(self.stop() or self.start())
 		if action == 'poll':
 			logs = ''
+			end = 0
 			if data.get('logs', False):
+				start = int(data.get('offset', 0))
+				fsize = getsize(self.logpath)
+				if start > fsize:
+					start = 0 # Logs may have been truncated, start over.
 				try:
-					# TODO to save data, only send new log lines.
-					logs = check_output(['tail', '-n' '46', self.logpath])
+					if start > 0:
+						with open(self.logpath) as file:
+							file.seek(start)
+							for line in file:
+								end = file.tell()
+								logs += line
+								if len(logs) > 100240:
+									break # Send up to 100 KB at a time.
+					else:
+						logs = check_output(['tail', '-n' '46', self.logpath])
+						end = fsize
 				except:
-					logs = '(The log file is empty!)'
-			return self.response(logs=logs)
+					pass # Oh well.
+			return self.response(logs=logs, offset=end)
 		return self.response('Unrecognized POST action: %s' % action)
 
 	def start(self):
@@ -116,12 +131,13 @@ class AdminPage:
 			tries += 1
 		return '' # No error.
 
-	def response(self, error='', logs=''):
+	def response(self, error='', logs='', offset=0):
 		response = {
 			'error': str(error),
 			'running': self.running(),
 			'captchas': self.captchas(),
 			'logs': logs,
+			'offset': offset,
 		}
 		return dumps(response)
 

@@ -1,4 +1,6 @@
+var interval = null;
 var getLogs = false;
+var offset = 0;
 
 function update(running)
 {
@@ -15,9 +17,35 @@ function request(command, data={})
 			alert(response.error);
 		update(response.running);
 		$('#captchas').text('Captchas (' + response.captchas + ')');
+		if(offset == 0)
+			$('#logs').text(''); // Remove loading message.
 		if(response.logs)
-			$('#logs').text(response.logs);
+		{
+			var logs = $('#logs');
+			var bottom = ($(window).scrollTop() + $(window).height() == $(document).height());
+			logs.append(response.logs);
+			if(bottom)
+				window.scrollTo(0, $('body')[0].scrollHeight);
+		}
+		if(response.offset)
+			offset = response.offset;
 	}, 'json');
+}
+
+function polling()
+{
+	if(interval)
+		clearInterval(interval);
+	// 2 seconds when tailing logs.
+	// 20 seconds on settings page.
+	var duration = getLogs ? 2000 : 20000;
+	interval = setInterval(function()
+	{
+		request('poll', {
+			'logs': getLogs,
+			'offset': offset,
+		});
+	}, duration);
 }
 
 $(document).ready(function()
@@ -25,7 +53,6 @@ $(document).ready(function()
 	$('#logs').hide();
 	update(parseInt($('body').attr('data-running')));
 	$('#captchas').text('Captchas (' + $('body').attr('data-captchas') + ')');
-	setInterval(function() { request('poll', { 'logs': getLogs }); }, 10000);
 	$('input[value=Add]').click(function()
 	{
 		var key = prompt('Enter the new setting name.').toLowerCase();
@@ -56,5 +83,10 @@ $(document).ready(function()
 		getLogs = !getLogs;
 		$(this).val(getLogs ? 'End' : 'Logs');
 		$('#settings, #logs').toggle();
+		polling();
 	});
+	polling();
 });
+
+// TODO add a "clear" button to log view.
+// Separate footer buttons for log/setting views.
