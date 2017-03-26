@@ -77,17 +77,23 @@ try:
 				continue
 			seen[pokemon['encounter_id']] = datetime.now()
 			name = pokedex[pokemon['pokemon_id'] - 1]
-			percent = (100.0 / 45.0) * (
-				pokemon['individual_attack'] +
-				pokemon['individual_defense'] +
-				pokemon['individual_stamina']
-			)
+			if pokemon['individual_attack'] is not None:
+				percent = (100.0 / 45.0) * (
+					pokemon['individual_attack'] +
+					pokemon['individual_defense'] +
+					pokemon['individual_stamina']
+				)
+			else:
+				console('Could not get IVs for %s!' % name)
+				percent = 0 # Assume it's shitty.
 			if not name in worthy or percent < worthy[name]:
 				console('%s (%.1f%%) is unworthy.' % (name, percent))
 				continue
-			until = sql_to_datetime(pokemon['disappear_time']).strftime('%-I:%M %p')
+			expires = sql_to_datetime(pokemon['disappear_time'])
+			until = expires.strftime('%-I:%M %p')
+			minutes, seconds = divmod((expires - datetime.now().replace(tzinfo=tz.tzlocal())).seconds, 60)
 			url = 'https://www.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
-			tweet = '%s (%.1f%%) %s %s' % (name, percent, until, url)
+			tweet = '%s (%.1f%%) until %s (%dm %ds) %s' % (name, percent, until, minutes, seconds, url)
 			console(tweet)
 			api.PostUpdate(tweet)
 		for encounter_id, when in seen.items():
