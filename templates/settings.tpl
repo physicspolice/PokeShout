@@ -14,7 +14,7 @@ $def with (settings, running, captchas)
 			<a href="$settings['manual-captcha-domain']/stats" data-type="server">Stats</a>
 			<a href="$settings['manual-captcha-domain']/bookmarklet" data-type="server" id="captchas">Captchas</a>
 			<a href="https://twitter.com/PokeShout">Twitter</a>
-			<a href="http://rocketmap.readthedocs.io/en/develop/extras/commandline.html">Docs</a>
+			<a href="http://rocketmap.readthedocs.io/en/develop/first-run/commandline.html">Docs</a>
 		</header>
 		<section id="settings">
 			$for key, value in settings.iteritems():
