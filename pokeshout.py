@@ -10,6 +10,8 @@ from dateutil import tz
 from subprocess import Popen
 
 def sql_to_datetime(timestamp):
+	if timestamp is None:
+		return datetime.now()
 	d = datetime.strptime(timestamp.split('.')[0], '%Y-%m-%d %H:%M:%S')
 	d = d.replace(tzinfo=tz.tzutc())  # Timestamp from database is in UTC.
 	return d.astimezone(tz.tzlocal()) # Convert it to my local time zone.
@@ -96,7 +98,7 @@ try:
 				continue
 			expires = sql_to_datetime(pokemon['disappear_time'])
 			minutes, seconds = divmod((expires - datetime.now().replace(tzinfo=tz.tzlocal())).seconds, 60)
-			url = 'https://www.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
+			url = 'https://maps.google.com/maps?q=%s,%s' % (pokemon['latitude'], pokemon['longitude'])
 			tweet = '%s %d%% (%d/%d/%d) [%s/%s] %s (%dm %ds) %s' % (
 				name,
 				percent,
