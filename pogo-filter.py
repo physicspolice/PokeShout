@@ -7,6 +7,7 @@ from sys import stdout
 from time import sleep
 from datetime import datetime
 from traceback import format_exc
+from requests import ConnectionError
 from twitter import Api, error
 
 regex = compile(': (.+) ([\d\.]+)\% .+ \(L(\d+)\)')
@@ -42,23 +43,18 @@ try:
 					continue # Only retweet from the wish list.
 				if int(level) < settings.wishlist[name]:
 					continue # Not high enough level to be worthy.
-				try:
-					api.PostUpdate(tweet.text)
-					print('  %s %s' % (time, tweet.text))
-					worthy += 1
-				except error.TwitterError as e:
-					try:
-						message = e.message[0]['message']
-					except Exception:
-						message = str(e)
-					if message != 'Status is a duplicate.':
-						print('Twitter error: %s' % message)
+				api.PostUpdate(tweet.text)
+				print('  %s %s' % (time, tweet.text))
+				worthy += 1
 			print('  %s Retweeted %d of %d tweets\r' % (time, worthy, count), end='')
 			stdout.flush()
-		except error.TwitterError:
-			print('\nTwitter error: ' + e.message)
+		except error.TwitterError as e:
+			if 'Status is a duplicate' not in str(e):
+				print('\nTwitter error: %s' % e)
+		except ConnectionError as e:
+			print('\nConnection error: %s' % e)
 		except Exception:
-			print("\n" + format_exc())
+			print('\nUnhandled exception: %s' % format_exc())
 		sleep(10)
 except KeyboardInterrupt:
 	print('\nGoodbye.')
