@@ -33,7 +33,8 @@ try:
 				since_id = max(since_id, tweet.id)
 				match = regex.search(tweet.text)
 				if not match:
-					print('Failed to parse tweet: %s' % tweet.text)
+					if '?%' not in tweet.text:
+						print('Failed to parse tweet: %s' % tweet.text)
 					continue
 				count += 1
 				(name, percent, level) = match.groups()
@@ -49,10 +50,13 @@ try:
 			print('  %s Retweeted %d of %d tweets\r' % (time, worthy, count), end='')
 			stdout.flush()
 		except error.TwitterError as e:
-			if 'Status is a duplicate' not in str(e):
+			if 'Text must be less than or equal to 140 characters' in str(e):
+				print("\n%s: %s" % (str(e), tweet.text))
+			elif 'Status is a duplicate' not in str(e):
 				print('\nTwitter error: %s' % e)
 		except ConnectionError as e:
-			print('\nConnection error: %s' % e)
+			if 'nodename nor servname provided' not in str(e):
+				print('\nConnection error: %s' % e)
 		except Exception:
 			print('\nUnhandled exception: %s' % format_exc())
 		sleep(10)
