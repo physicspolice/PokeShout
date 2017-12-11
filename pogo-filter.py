@@ -44,14 +44,15 @@ try:
 					continue # Only retweet from the wish list.
 				if int(level) < settings.wishlist[name]:
 					continue # Not high enough level to be worthy.
-				api.PostUpdate(tweet.text)
-				print('  %s %s' % (time, tweet.text))
+				text = tweet.text.replace('100.0% (15/15/15)', '100%')
+				api.PostUpdate(text)
+				print('  %s %s' % (time, text))
 				worthy += 1
 			print('  %s Retweeted %d of %d tweets\r' % (time, worthy, count), end='')
 			stdout.flush()
 		except error.TwitterError as e:
 			if 'Text must be less than or equal to 140 characters' in str(e):
-				print("\n%s: %s" % (str(e), tweet.text))
+				print("\n%s: %s" % (str(e), text))
 			elif 'Status is a duplicate' not in str(e):
 				print('\nTwitter error: %s' % e)
 		except ConnectionError as e:
